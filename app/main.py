@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.router import api_router
 from app.core.config import get_settings
+from app.core.health import run_health_checks
 from app.realtime.socket import create_socket_app
 
 settings = get_settings()
@@ -24,8 +25,11 @@ fastapi_app.include_router(api_router, prefix=settings.api_v1_prefix)
 
 
 @fastapi_app.get("/health", tags=["health"])
-def healthcheck() -> dict[str, str]:
-    return {"status": "ok"}
+def healthcheck(response: Response) -> dict:
+    result = run_health_checks()
+    if result["status"] != "ok":
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    return result
 
 
 app = create_socket_app(fastapi_app)

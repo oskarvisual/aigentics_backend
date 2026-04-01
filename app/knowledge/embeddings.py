@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Protocol
 
+from google import genai
+
 
 class EmbeddingProvider(Protocol):
     def embed_texts(self, texts: list[str]) -> list[list[float]]:
@@ -18,11 +20,16 @@ class GeminiEmbeddingProvider:
 
     def __init__(self, api_key: str | None, model_name: str) -> None:
         self.api_key = api_key
-        self.model_name = model_name
+        self.model_name = model_name.removeprefix("models/")
 
     def embed_texts(self, texts: list[str]) -> list[list[float]]:
-        raise NotImplementedError(
-            "Wire the active Google GenAI SDK for Gemini Embedding here. "
-            "The service boundary is ready; only the provider adapter remains SDK-specific."
-        )
+        if not texts:
+            return []
+
+        if not self.api_key:
+            raise ValueError("GOOGLE_API_KEY is required for Gemini embeddings.")
+
+        client = genai.Client(api_key=self.api_key)
+        response = client.models.embed_content(model=self.model_name, contents=texts)
+        return [list(embedding.values) for embedding in response.embeddings]
 

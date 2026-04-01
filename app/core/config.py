@@ -1,7 +1,8 @@
 from functools import lru_cache
+from typing import Annotated
 
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -20,6 +21,8 @@ class Settings(BaseSettings):
 
     s3_endpoint: str = "http://localhost:9000"
     s3_bucket: str = "aigentics"
+    s3_region: str | None = None
+    s3_key_prefix: str = ""
     s3_access_key: str = "minioadmin"
     s3_secret_key: str = "minioadmin"
 
@@ -31,7 +34,9 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 30
 
-    cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
+    cors_origins: Annotated[list[str], NoDecode] = Field(
+        default_factory=lambda: ["http://localhost:3000"]
+    )
     socket_io_path: str = "/socket.io"
 
     default_agent_model_openai: str = "openai:gpt-4o-mini"
